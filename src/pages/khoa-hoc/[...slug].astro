@@ -1,0 +1,349 @@
+---
+/**
+ * /khoa-hoc/[...slug] — Trang bài học
+ * Render nội dung Markdown + navigation giữa các bài
+ */
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const lessons = await getCollection("courses");
+  return lessons.map((lesson) => ({
+    params: { slug: lesson.slug },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const { Content } = await lesson.render();
+
+// Lấy tất cả bài học trong cùng module để tạo navigation
+const allLessons = (await getCollection("courses"))
+  .filter((l) => l.data.module.id === lesson.data.module.id && !l.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const currentIndex = allLessons.findIndex((l) => l.slug === lesson.slug);
+const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+---
+
+<BaseLayout
+  title={`${lesson.data.title} — Dân Cư Mạng`}
+  description={lesson.data.description}
+>
+  <article class="lesson-page">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <a href="/khoa-hoc">Khóa học</a>
+      <span class="separator">/</span>
+      <span>{lesson.data.module.icon} {lesson.data.module.title}</span>
+      <span class="separator">/</span>
+      <span>Bài {lesson.data.order}</span>
+    </nav>
+
+    <!-- Header -->
+    <header class="lesson-header">
+      <div class="lesson-meta-top">
+        <span class="difficulty-badge" data-difficulty={lesson.data.difficulty}>
+          {lesson.data.difficulty === "beginner" ? "Cơ bản" : "Trung bình"}
+        </span>
+        <span class="duration">⏱ {lesson.data.duration} phút đọc</span>
+        {lesson.data.updatedAt && (
+          <span class="updated">
+            Cập nhật: {lesson.data.updatedAt.toLocaleDateString("vi-VN")}
+          </span>
+        )}
+      </div>
+      <h1>{lesson.data.title}</h1>
+      <p class="lesson-description">{lesson.data.description}</p>
+    </header>
+
+    <!-- Nội dung bài học (Markdown) -->
+    <div class="lesson-content prose">
+      <Content />
+    </div>
+
+    <!-- Tags -->
+    {lesson.data.tags.length > 0 && (
+      <div class="lesson-tags">
+        {lesson.data.tags.map((tag: string) => (
+          <span class="tag">#{tag}</span>
+        ))}
+      </div>
+    )}
+
+    <!-- Navigation bài trước / sau -->
+    <nav class="lesson-nav">
+      {prevLesson ? (
+        <a href={`/khoa-hoc/${prevLesson.slug}`} class="nav-link prev">
+          <span class="nav-direction">← Bài trước</span>
+          <span class="nav-title">{prevLesson.data.title}</span>
+        </a>
+      ) : (
+        <div></div>
+      )}
+
+      {nextLesson ? (
+        <a href={`/khoa-hoc/${nextLesson.slug}`} class="nav-link next">
+          <span class="nav-direction">Bài tiếp →</span>
+          <span class="nav-title">{nextLesson.data.title}</span>
+        </a>
+      ) : (
+        <a href="/khoa-hoc" class="nav-link next">
+          <span class="nav-direction">Hoàn thành module! 🎉</span>
+          <span class="nav-title">Quay về danh sách khóa học</span>
+        </a>
+      )}
+    </nav>
+
+    <!-- Sidebar: Module outline -->
+    <aside class="module-outline">
+      <h3>{lesson.data.module.icon} {lesson.data.module.title}</h3>
+      <ol>
+        {allLessons.map((l) => (
+          <li class:list={[{ active: l.slug === lesson.slug }]}>
+            <a href={`/khoa-hoc/${l.slug}`}>
+              {l.data.title}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  </article>
+</BaseLayout>
+
+<style>
+  .lesson-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 100px 24px 80px;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .breadcrumb a {
+    color: #0f3460;
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .separator { opacity: 0.4; }
+
+  /* Header */
+  .lesson-header { margin-bottom: 40px; }
+
+  .lesson-meta-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .difficulty-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #eef4fb;
+    color: #0f3460;
+  }
+
+  .duration, .updated {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  .lesson-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  .lesson-description {
+    font-size: 1.05rem;
+    color: #6b7280;
+    line-height: 1.7;
+  }
+
+  /* Nội dung bài học (prose) */
+  .lesson-content {
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+
+  .lesson-content :global(h2) {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: 40px;
+    margin-bottom: 16px;
+  }
+
+  .lesson-content :global(h3) {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-top: 28px;
+    margin-bottom: 12px;
+  }
+
+  .lesson-content :global(p) {
+    margin-bottom: 16px;
+  }
+
+  .lesson-content :global(blockquote) {
+    border-left: 4px solid #e94560;
+    background: #fff0f3;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: normal;
+  }
+
+  .lesson-content :global(code) {
+    background: #f3f0ea;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .lesson-content :global(pre) {
+    background: #1a1a2e;
+    color: #e8e0d4;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+
+  .lesson-content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.9rem;
+  }
+
+  .lesson-content :global(th),
+  .lesson-content :global(td) {
+    border: 1px solid #e8e0d4;
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  .lesson-content :global(th) {
+    background: #f5f1eb;
+    font-weight: 700;
+  }
+
+  .lesson-content :global(img) {
+    max-width: 100%;
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+
+  /* Tags */
+  .lesson-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e0d4;
+  }
+  .tag {
+    font-size: 0.8rem;
+    color: #0f3460;
+    background: #eef4fb;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+
+  /* Navigation */
+  .lesson-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid #e8e0d4;
+  }
+
+  .nav-link {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    border: 1px solid #e8e0d4;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover {
+    border-color: #0f3460;
+    background: #fdfaf6;
+  }
+
+  .nav-link.next { text-align: right; }
+
+  .nav-direction {
+    font-size: 0.75rem;
+    color: #0f3460;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .nav-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  /* Module outline sidebar (hiện dưới bài trên mobile) */
+  .module-outline {
+    margin-top: 40px;
+    padding: 24px;
+    background: #f5f1eb;
+    border-radius: 12px;
+  }
+
+  .module-outline h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .module-outline ol {
+    list-style: decimal;
+    padding-left: 20px;
+    margin: 0;
+  }
+
+  .module-outline li {
+    padding: 6px 0;
+    font-size: 0.9rem;
+  }
+
+  .module-outline li.active {
+    font-weight: 700;
+    color: #0f3460;
+  }
+
+  .module-outline a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .module-outline a:hover {
+    text-decoration: underline;
+  }
+</style>

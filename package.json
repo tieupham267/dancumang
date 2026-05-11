@@ -1,0 +1,18 @@
+{
+  "name": "dancumang",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Dân Cư Mạng — Kiến thức bảo mật cho mọi người",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.x",
+    "@astrojs/mdx": "^4.x",
+    "@astrojs/react": "^4.x",
+    "react": "^19.x",
+    "react-dom": "^19.x"
+  }
+}

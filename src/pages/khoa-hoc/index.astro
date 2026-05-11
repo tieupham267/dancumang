@@ -1,0 +1,192 @@
+---
+/**
+ * /khoa-hoc/ — Trang danh sách khóa học
+ * Hiển thị tất cả module, mỗi module liệt kê các bài học
+ */
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// Lấy tất cả bài học (không draft)
+const allLessons = (await getCollection("courses"))
+  .filter((lesson) => !lesson.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+// Nhóm theo module
+const modules = allLessons.reduce((acc, lesson) => {
+  const moduleId = lesson.data.module.id;
+  if (!acc[moduleId]) {
+    acc[moduleId] = {
+      id: moduleId,
+      title: lesson.data.module.title,
+      icon: lesson.data.module.icon || "📚",
+      lessons: [],
+    };
+  }
+  acc[moduleId].lessons.push(lesson);
+  return acc;
+}, {} as Record<string, any>);
+
+const moduleList = Object.values(modules);
+---
+
+<BaseLayout title="Khóa học — Dân Cư Mạng" description="Học bảo mật từ con số 0, miễn phí, bằng tiếng Việt.">
+  <main class="courses-page">
+    <header class="courses-header">
+      <h1>Khóa học bảo mật</h1>
+      <p>Mỗi bài học chỉ mất 5-7 phút. Bắt đầu từ Module 1 và đi theo thứ tự, hoặc chọn chủ đề bạn quan tâm.</p>
+    </header>
+
+    {moduleList.map((mod, index) => (
+      <section class="module-card">
+        <div class="module-header">
+          <span class="module-icon">{mod.icon}</span>
+          <div>
+            <span class="module-label">Module {index + 1}</span>
+            <h2>{mod.title}</h2>
+          </div>
+        </div>
+
+        <ol class="lesson-list">
+          {mod.lessons.map((lesson: any) => (
+            <li>
+              <a href={`/khoa-hoc/${lesson.slug}`} class="lesson-link">
+                <div class="lesson-info">
+                  <span class="lesson-title">{lesson.data.title}</span>
+                  <span class="lesson-meta">
+                    {lesson.data.duration} phút
+                    {lesson.data.hasQuiz && <span class="quiz-badge">Có quiz</span>}
+                  </span>
+                </div>
+                <span class="lesson-arrow">→</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+
+        <div class="module-progress">
+          <span>{mod.lessons.length} bài học</span>
+        </div>
+      </section>
+    ))}
+  </main>
+</BaseLayout>
+
+<style>
+  .courses-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 100px 24px 80px;
+  }
+
+  .courses-header {
+    margin-bottom: 48px;
+  }
+
+  .courses-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  .courses-header p {
+    color: #6b7280;
+    line-height: 1.7;
+  }
+
+  .module-card {
+    background: #fff;
+    border: 1px solid #e8e0d4;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .module-icon {
+    font-size: 2rem;
+  }
+
+  .module-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0f3460;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .module-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .lesson-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .lesson-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+  }
+
+  .lesson-link:hover {
+    background: #f5f1eb;
+  }
+
+  .lesson-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+  }
+
+  .lesson-meta {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .quiz-badge {
+    background: #ecfdf5;
+    color: #10b981;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .lesson-arrow {
+    color: #0f3460;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .lesson-link:hover .lesson-arrow {
+    opacity: 1;
+  }
+
+  .module-progress {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e8e0d4;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+</style>
