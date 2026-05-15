@@ -9,9 +9,10 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.x",
     "@astrojs/mdx": "^4.x",
     "@astrojs/react": "^4.x",
+    "astro": "^5.x",
+    "lucide-react": "^1.16.0",
     "react": "^19.x",
     "react-dom": "^19.x"
   }

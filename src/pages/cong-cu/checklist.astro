@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SecurityChecklist from "../../components/SecurityChecklist.tsx";
+import { CircleCheck } from "lucide-react";
+---
+
+<BaseLayout
+  title="Checklist bảo mật cá nhân — Dân Cư Mạng"
+  description="15 việc cần làm để dùng internet an toàn. Tick từng cái khi xong — trạng thái lưu trong trình duyệt của bạn."
+>
+  <main class="tool-page">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <a href="/cong-cu/">Công cụ</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <span class="current">Checklist bảo mật</span>
+    </nav>
+
+    <header class="tool-header">
+      <span class="eyebrow eyebrow-accent">
+        <CircleCheck className="eyebrow-icon" aria-hidden="true" strokeWidth={2.2} />
+        Công cụ
+      </span>
+      <h1>Checklist bảo mật cá nhân</h1>
+      <p class="lede">
+        15 việc cần làm để bảo vệ mình. Tick từng cái khi xong.
+        Không cần đăng nhập — <strong>trạng thái lưu trong trình duyệt này</strong>.
+        Mỗi tick là một bước thật giúp bạn an toàn hơn.
+      </p>
+    </header>
+
+    <SecurityChecklist client:load />
+  </main>
+</BaseLayout>
+
+<style>
+  .tool-page {
+    max-width: var(--container-reading);
+    margin: 0 auto;
+    padding: clamp(40px, 4vw, 56px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--primary); }
+  .separator { opacity: 0.4; }
+  .current { color: var(--ink); font-weight: 600; }
+
+  .eyebrow-icon { width: 14px; height: 14px; }
+  .eyebrow-accent { background: var(--accent-soft); color: var(--accent); }
+
+  .tool-header { margin-bottom: 36px; }
+
+  .tool-header h1 {
+    font-size: clamp(1.85rem, 1.2rem + 2.2vw, 2.6rem);
+    font-weight: 800;
+    margin: 16px 0 14px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .lede {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+</style>

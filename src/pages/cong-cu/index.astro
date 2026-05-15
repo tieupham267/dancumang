@@ -1,0 +1,325 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LockKeyhole, Target, CircleCheck, ShieldCheck, Wrench } from "lucide-react";
+import type { ComponentType } from "react";
+
+interface ToolCard {
+  href: string;
+  Icon: ComponentType<{ className?: string; "aria-hidden"?: boolean; strokeWidth?: number }>;
+  title: string;
+  desc: string;
+  badge: string;
+  accent: string;
+}
+
+const tools: ToolCard[] = [
+  {
+    href: "/cong-cu/kiem-tra-mat-khau/",
+    Icon: LockKeyhole,
+    title: "Kiểm tra độ mạnh mật khẩu",
+    desc: "Nhập mật khẩu, biết ngay nó tệ hay đủ dùng. Hacker mất bao lâu để bẻ khóa?",
+    badge: "Client-side",
+    accent: "var(--primary)",
+  },
+  {
+    href: "/cong-cu/quiz-phishing/",
+    Icon: Target,
+    title: "Quiz nhận diện lừa đảo",
+    desc: "8 tin nhắn thật — bạn có nhận ra cái nào là lừa đảo không? Có giải thích sau mỗi câu.",
+    badge: "8 tình huống VN",
+    accent: "var(--danger)",
+  },
+  {
+    href: "/cong-cu/checklist/",
+    Icon: CircleCheck,
+    title: "Checklist bảo mật cá nhân",
+    desc: "15 việc cần làm. Tick từng cái khi xong. Trạng thái lưu trong trình duyệt của bạn.",
+    badge: "Lưu local",
+    accent: "var(--accent)",
+  },
+];
+---
+
+<BaseLayout
+  title="Công cụ bảo mật — Dân Cư Mạng"
+  description="Bộ công cụ tương tác để thực hành bảo mật: kiểm tra mật khẩu, quiz nhận diện lừa đảo, checklist cá nhân. Tất cả chạy trong trình duyệt."
+>
+  <main class="tools-page">
+    <header class="tools-header">
+      <span class="eyebrow eyebrow-accent">
+        <Wrench className="eyebrow-icon" aria-hidden="true" strokeWidth={2.2} />
+        Công cụ
+      </span>
+      <h1>Thực hành ngay — không cần đăng ký</h1>
+      <p class="lede">
+        3 công cụ tương tác giúp bạn áp dụng những gì học được.
+        Tất cả chạy trong trình duyệt — <strong>không có backend, không log, không cookie tracking</strong>.
+      </p>
+    </header>
+
+    <div class="tool-grid">
+      {tools.map((tool) => {
+        const ToolIcon = tool.Icon;
+        return (
+          <a href={tool.href} class="tool-card" style={`--accent: ${tool.accent};`}>
+            <div class="tool-card-top">
+              <span class="tool-icon-wrap">
+                <ToolIcon className="tool-icon" aria-hidden={true} strokeWidth={2} />
+              </span>
+              <span class="tool-badge">{tool.badge}</span>
+            </div>
+            <h2>{tool.title}</h2>
+            <p>{tool.desc}</p>
+            <span class="tool-cta">
+              Mở công cụ
+              <span class="tool-cta-arrow" aria-hidden="true">→</span>
+            </span>
+          </a>
+        );
+      })}
+    </div>
+
+    <section class="privacy-note">
+      <div class="privacy-head">
+        <span class="privacy-mark">
+          <ShieldCheck className="privacy-icon" aria-hidden="true" strokeWidth={2.2} />
+        </span>
+        <div>
+          <h3>Cam kết của Dân Cư Mạng</h3>
+          <p class="privacy-sub">Mọi thứ chạy trên máy bạn — không ai khác nhìn thấy.</p>
+        </div>
+      </div>
+      <ul>
+        <li><span class="check">✓</span> Trang này là <strong>static</strong>, không có database, không backend.</li>
+        <li><span class="check">✓</span> Tất cả input bạn nhập <strong>chỉ ở trong trình duyệt của bạn</strong>.</li>
+        <li><span class="check">✓</span> Không cookie, không analytics third-party, không trackers.</li>
+        <li><span class="check">✓</span> Mã nguồn mở (MIT) — <a href="https://github.com/tieupham267/dancumang">kiểm tra trên GitHub</a>.</li>
+      </ul>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .tools-page {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: clamp(40px, 5vw, 64px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .eyebrow-icon { width: 14px; height: 14px; }
+
+  .eyebrow-accent {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tools-header { margin-bottom: 56px; max-width: 720px; }
+
+  .tools-header h1 {
+    font-size: clamp(2rem, 1.2rem + 2.4vw, 3rem);
+    font-weight: 800;
+    margin: 16px 0 18px;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  .lede {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: clamp(64px, 7vw, 96px);
+  }
+
+  .tool-card {
+    --accent: var(--primary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--duration-normal) var(--ease-out),
+                border-color var(--duration-fast),
+                box-shadow var(--duration-normal);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-normal) var(--ease-out);
+  }
+
+  .tool-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+    box-shadow: 0 12px 32px -18px color-mix(in oklab, var(--accent) 50%, transparent);
+  }
+
+  .tool-card:hover::before { transform: scaleX(1); }
+
+  .tool-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .tool-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-icon-wrap :global(.tool-icon) {
+    width: 26px;
+    height: 26px;
+    color: var(--accent);
+  }
+
+  .tool-badge {
+    font-family: var(--font-mono);
+    background: var(--surface-soft);
+    color: var(--ink-muted);
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.02em;
+  }
+
+  .tool-card h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--ink-strong);
+  }
+
+  .tool-card p {
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    flex: 1;
+    margin-bottom: 18px;
+  }
+
+  .tool-cta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.92rem;
+  }
+
+  .tool-cta-arrow {
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .tool-card:hover .tool-cta-arrow { transform: translateX(4px); }
+
+  /* ===== Privacy ===== */
+  .privacy-note {
+    background: linear-gradient(135deg, var(--success-soft) 0%, var(--accent-soft) 100%);
+    border: 1px solid color-mix(in oklab, var(--success) 25%, transparent);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+  }
+
+  .privacy-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .privacy-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+  }
+
+  .privacy-mark :global(.privacy-icon) {
+    width: 22px;
+    height: 22px;
+    color: var(--success);
+  }
+
+  .privacy-note h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 2px;
+  }
+
+  .privacy-sub {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+  }
+
+  .privacy-note ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    line-height: 1.65;
+  }
+
+  .privacy-note li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+
+  .privacy-note .check {
+    color: var(--success);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .privacy-note strong { color: var(--ink-strong); }
+
+  .privacy-note a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .tool-card { padding: 22px; }
+    .privacy-note { padding: 24px 20px; }
+  }
+</style>

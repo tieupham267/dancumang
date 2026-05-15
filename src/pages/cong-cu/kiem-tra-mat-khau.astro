@@ -1,0 +1,143 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PasswordStrengthMeter from "../../components/PasswordStrengthMeter.tsx";
+import { LockKeyhole } from "lucide-react";
+---
+
+<BaseLayout
+  title="Kiểm tra độ mạnh mật khẩu — Dân Cư Mạng"
+  description="Dán mật khẩu, biết ngay nó có an toàn không. Hoàn toàn chạy trong trình duyệt, không gửi đi đâu cả."
+>
+  <main class="tool-page">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <a href="/cong-cu/">Công cụ</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <span class="current">Kiểm tra mật khẩu</span>
+    </nav>
+
+    <header class="tool-header">
+      <span class="eyebrow">
+        <LockKeyhole className="eyebrow-icon" aria-hidden="true" strokeWidth={2.2} />
+        Công cụ
+      </span>
+      <h1>Kiểm tra độ mạnh mật khẩu</h1>
+      <p class="lede">
+        Nhập mật khẩu để xem nó tệ đến đâu — hoặc tốt đến đâu.
+        Trang này là static, không có backend; <strong>mật khẩu của bạn không rời khỏi thiết bị.</strong>
+      </p>
+    </header>
+
+    <section class="tool-panel">
+      <PasswordStrengthMeter client:load />
+    </section>
+
+    <section class="tool-meta">
+      <h2>Công cụ này hoạt động thế nào?</h2>
+      <ul>
+        <li>Đếm độ dài và độ đa dạng ký tự (chữ thường, hoa, số, ký hiệu).</li>
+        <li>Tính <strong>entropy</strong> — đại lượng đo độ "khó đoán" — theo công thức <code>log₂(pool^length)</code>.</li>
+        <li>Đối chiếu với danh sách mật khẩu phổ biến nhất, các dãy đi liền và pattern thông tin cá nhân ở VN (năm sinh, số điện thoại 10 chữ số).</li>
+        <li>Ước lượng thời gian hacker mất, giả định họ thử <strong>10 tỷ mật khẩu/giây</strong> bằng GPU thế hệ mới.</li>
+      </ul>
+      <p>
+        Ước lượng <em>không phải</em> là con số tuyệt đối — nó là cách dễ hình dung.
+        Quy tắc thực tế: nếu công cụ này nói "tức thì" hoặc "vài phút", đổi ngay.
+      </p>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .tool-page {
+    max-width: var(--container-reading);
+    margin: 0 auto;
+    padding: clamp(40px, 4vw, 56px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--primary); }
+  .separator { opacity: 0.4; }
+  .current { color: var(--ink); font-weight: 600; }
+
+  .eyebrow-icon { width: 14px; height: 14px; }
+
+  .tool-header { margin-bottom: 40px; }
+
+  .tool-header h1 {
+    font-size: clamp(1.85rem, 1.2rem + 2.2vw, 2.6rem);
+    font-weight: 800;
+    margin: 16px 0 14px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .lede {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .tool-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    margin-bottom: 48px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .tool-meta {
+    padding: 28px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .tool-meta h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--ink-strong);
+  }
+
+  .tool-meta ul {
+    padding-left: 22px;
+    margin-bottom: 16px;
+  }
+
+  .tool-meta li {
+    margin-bottom: 10px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  .tool-meta code {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 0.88em;
+    font-family: var(--font-mono);
+  }
+
+  .tool-meta p {
+    color: var(--ink-muted);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 600px) {
+    .tool-panel { padding: 22px 18px; }
+    .tool-meta { padding: 22px 20px; }
+  }
+</style>

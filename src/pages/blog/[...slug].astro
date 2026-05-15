@@ -1,0 +1,424 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Calendar, Clock, RefreshCw, ArrowLeft, ArrowRight } from "lucide-react";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const related = (await getCollection("blog"))
+  .filter((p) => !p.data.draft && p.slug !== post.slug && p.data.category === post.data.category)
+  .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime())
+  .slice(0, 3);
+
+const categorySlug = post.data.category.replace(/\s+/g, "-");
+const updated = post.data.updatedDate ? post.data.updatedDate.toLocaleDateString("vi-VN") : null;
+---
+
+<BaseLayout title={`${post.data.title} — Dân Cư Mạng`} description={post.data.description}>
+  <article class="post-page">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <a href="/blog/">Blog</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <span class:list={["cat-badge", `cat-${categorySlug}`]}>{post.data.category}</span>
+    </nav>
+
+    <header class="post-header">
+      <h1>{post.data.title}</h1>
+      <p class="post-description">{post.data.description}</p>
+      <div class="post-meta">
+        <span class="meta-item">
+          <Calendar className="meta-icon" aria-hidden={true} strokeWidth={2.2} />
+          {post.data.publishedDate.toLocaleDateString("vi-VN")}
+        </span>
+        <span class="meta-item">
+          <Clock className="meta-icon" aria-hidden={true} strokeWidth={2.2} />
+          {post.data.readTime}
+        </span>
+        {updated && (
+          <span class="meta-item">
+            <RefreshCw className="meta-icon" aria-hidden={true} strokeWidth={2.2} />
+            Cập nhật: {updated}
+          </span>
+        )}
+      </div>
+    </header>
+
+    {post.data.coverImage && (
+      <img class="post-cover" src={post.data.coverImage} alt={post.data.title} loading="lazy" />
+    )}
+
+    <div class="post-content prose">
+      <Content />
+    </div>
+
+    {post.data.tags.length > 0 && (
+      <div class="post-tags">
+        {post.data.tags.map((tag: string) => (
+          <span class="tag">#{tag}</span>
+        ))}
+      </div>
+    )}
+
+    {related.length > 0 && (
+      <aside class="related" aria-label="Bài viết liên quan">
+        <h3>Đọc thêm về <span>{post.data.category}</span></h3>
+        <ul>
+          {related.map((p) => (
+            <li>
+              <a href={`/blog/${p.slug}/`}>
+                <span class="related-title">{p.data.title}</span>
+                <span class="related-meta">
+                  <span>{p.data.publishedDate.toLocaleDateString("vi-VN")}</span>
+                  <ArrowRight className="related-arrow" aria-hidden={true} strokeWidth={2.2} />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )}
+
+    <div class="back-link">
+      <a href="/blog/">
+        <ArrowLeft className="back-arrow" aria-hidden={true} strokeWidth={2.2} />
+        Quay về tất cả cảnh báo
+      </a>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-page {
+    max-width: var(--container-reading);
+    margin: 0 auto;
+    padding: clamp(40px, 4vw, 64px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast);
+  }
+  .breadcrumb a:hover { color: var(--primary); }
+  .separator { opacity: 0.4; font-size: 0.9rem; }
+
+  /* ===== Cat badges ===== */
+  .cat-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .cat-badge.cat-cảnh-báo { background: var(--danger-soft); color: var(--danger); }
+  .cat-badge.cat-hướng-dẫn { background: var(--success-soft); color: #047857; }
+  .cat-badge.cat-tin-tức { background: var(--primary-soft); color: var(--primary); }
+  .cat-badge.cat-phân-tích { background: var(--warn-soft); color: #92400E; }
+
+  /* ===== Header ===== */
+  .post-header {
+    margin-bottom: 36px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-header h1 {
+    font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -0.025em;
+    color: var(--ink-strong);
+  }
+
+  .post-description {
+    font-size: 1.12rem;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+  }
+
+  .post-meta .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .post-meta :global(.meta-icon) {
+    width: 14px;
+    height: 14px;
+    color: var(--ink-faint);
+  }
+
+  .post-cover {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    margin-bottom: 36px;
+    border: 1px solid var(--border);
+  }
+
+  /* ===== Prose ===== */
+  .post-content {
+    line-height: 1.85;
+    font-size: 1.04rem;
+    color: var(--ink);
+  }
+
+  .post-content :global(h2) {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 44px;
+    margin-bottom: 16px;
+    letter-spacing: -0.015em;
+    color: var(--ink-strong);
+  }
+
+  .post-content :global(h3) {
+    font-family: var(--font-display);
+    font-size: 1.18rem;
+    font-weight: 700;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    color: var(--ink-strong);
+  }
+
+  .post-content :global(p) { margin-bottom: 16px; }
+
+  .post-content :global(a) {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+
+  .post-content :global(a:hover) {
+    text-decoration-color: var(--primary);
+  }
+
+  .post-content :global(strong) {
+    color: var(--ink-strong);
+    font-weight: 700;
+  }
+
+  .post-content :global(blockquote) {
+    border-left: 4px solid var(--danger);
+    background: var(--danger-soft);
+    padding: 16px 20px;
+    margin: 24px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+
+  .post-content :global(blockquote p:last-child) { margin-bottom: 0; }
+
+  .post-content :global(ul),
+  .post-content :global(ol) {
+    padding-left: 1.4em;
+    margin-bottom: 16px;
+  }
+
+  .post-content :global(li) { margin-bottom: 6px; }
+
+  .post-content :global(img) {
+    max-width: 100%;
+    border-radius: var(--radius-md);
+    margin: 24px 0;
+    border: 1px solid var(--border);
+  }
+
+  .post-content :global(code) {
+    background: var(--surface-sunken);
+    color: var(--ink-strong);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 0.88em;
+    font-family: var(--font-mono);
+    border: 1px solid var(--border);
+  }
+
+  .post-content :global(pre) {
+    background: var(--ink-strong);
+    color: #e8eef7;
+    padding: 22px;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    margin: 24px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .post-content :global(pre code) {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .post-content :global(hr) {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  /* ===== Tags ===== */
+  .post-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tag {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+  }
+
+  /* ===== Related ===== */
+  .related {
+    margin-top: 48px;
+    padding: 28px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .related h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--ink-strong);
+  }
+
+  .related h3 span { color: var(--primary); }
+
+  .related ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .related a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color var(--duration-fast),
+                transform var(--duration-fast) var(--ease-out);
+  }
+
+  .related a:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  .related-title {
+    font-weight: 600;
+    flex: 1;
+    color: var(--ink-strong);
+    line-height: 1.4;
+  }
+
+  .related-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .related-meta :global(.related-arrow) {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .related a:hover .related-meta :global(.related-arrow) {
+    transform: translateX(2px);
+  }
+
+  /* ===== Back link ===== */
+  .back-link {
+    margin-top: 48px;
+    text-align: center;
+  }
+
+  .back-link a {
+    color: var(--ink-muted);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    transition: border-color var(--duration-fast),
+                color var(--duration-fast);
+  }
+
+  .back-link a :global(.back-arrow) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .back-link a:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+</style>

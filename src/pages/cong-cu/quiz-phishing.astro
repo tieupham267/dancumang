@@ -1,0 +1,164 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PhishingQuiz from "../../components/PhishingQuiz.tsx";
+import { Target } from "lucide-react";
+---
+
+<BaseLayout
+  title="Quiz nhận diện lừa đảo — Dân Cư Mạng"
+  description="8 tình huống thật — bạn có nhận ra cái nào là lừa đảo không? Mỗi câu đều có giải thích sau khi trả lời."
+>
+  <main class="tool-page">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <a href="/cong-cu/">Công cụ</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <span class="current">Quiz lừa đảo</span>
+    </nav>
+
+    <header class="tool-header">
+      <span class="eyebrow eyebrow-danger">
+        <Target className="eyebrow-icon" aria-hidden="true" strokeWidth={2.2} />
+        Công cụ
+      </span>
+      <h1>Tin nhắn này thật hay lừa đảo?</h1>
+      <p class="lede">
+        8 tình huống dựa trên các vụ thật ở Việt Nam: SMS giả ngân hàng, công an giả gọi Zalo, bạn bè bị hack Messenger mượn tiền…
+        Trả lời nhanh — không trừ điểm nếu sai, mục đích là học cách nhận diện.
+      </p>
+    </header>
+
+    <section class="tool-panel">
+      <PhishingQuiz client:load />
+    </section>
+
+    <section class="tool-meta">
+      <h2>Quy tắc vàng nhận diện lừa đảo</h2>
+      <ol class="rules-list">
+        <li>
+          <span class="rule-num">01</span>
+          <div>
+            <strong>Tạo áp lực thời gian</strong> ("trong 24h", "ngay lập tức"): 90% là lừa.
+          </div>
+        </li>
+        <li>
+          <span class="rule-num">02</span>
+          <div>
+            <strong>Yêu cầu OTP / mật khẩu</strong>: không bao giờ — kể cả "nhân viên ngân hàng".
+          </div>
+        </li>
+        <li>
+          <span class="rule-num">03</span>
+          <div>
+            <strong>Link lạ</strong>: domain không phải chính thức, có chữ "login" / "secure" / đuôi lạ.
+          </div>
+        </li>
+        <li>
+          <span class="rule-num">04</span>
+          <div>
+            <strong>Yêu cầu cài app qua link</strong>: chỉ cài từ App Store / Google Play.
+          </div>
+        </li>
+        <li>
+          <span class="rule-num">05</span>
+          <div>
+            <strong>Bạn bè mượn tiền gấp</strong>: gọi điện xác nhận trước khi chuyển khoản.
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .tool-page {
+    max-width: var(--container-reading);
+    margin: 0 auto;
+    padding: clamp(40px, 4vw, 56px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--primary); }
+  .separator { opacity: 0.4; }
+  .current { color: var(--ink); font-weight: 600; }
+
+  .eyebrow-icon { width: 14px; height: 14px; }
+  .eyebrow-danger { background: var(--danger-soft); color: var(--danger); }
+
+  .tool-header { margin-bottom: 40px; }
+
+  .tool-header h1 {
+    font-size: clamp(1.85rem, 1.2rem + 2.2vw, 2.6rem);
+    font-weight: 800;
+    margin: 16px 0 14px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .lede {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .tool-panel {
+    margin-bottom: 48px;
+  }
+
+  .tool-meta {
+    padding: 32px;
+    background: var(--ink-strong);
+    color: #fff;
+    border-radius: var(--radius-xl);
+  }
+
+  .tool-meta h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #fff;
+  }
+
+  .rules-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rules-list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: start;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.96rem;
+  }
+
+  .rule-num {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0, 184, 169, 0.15);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+  }
+
+  .rules-list strong { color: #fff; }
+
+  @media (max-width: 600px) {
+    .tool-meta { padding: 24px 20px; }
+  }
+</style>

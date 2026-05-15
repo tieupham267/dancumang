@@ -1,0 +1,434 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Rss, AlertTriangle } from "lucide-react";
+
+const allPosts = (await getCollection("blog"))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime());
+
+const allCategories = ["cảnh báo", "hướng dẫn", "tin tức", "phân tích"] as const;
+
+interface CategoryStat {
+  key: (typeof allCategories)[number];
+  count: number;
+}
+
+const categoryStats: CategoryStat[] = allCategories.map((key) => ({
+  key,
+  count: allPosts.filter((p) => p.data.category === key).length,
+}));
+
+const featured = allPosts.find((post) => post.data.featured) ?? allPosts[0];
+const rest = allPosts.filter((post) => post.slug !== featured?.slug);
+---
+
+<BaseLayout
+  title="Blog & Cảnh báo bảo mật — Dân Cư Mạng"
+  description="Cảnh báo lừa đảo mới, hướng dẫn thực hành, tin tức bảo mật cho người dùng phổ thông Việt Nam."
+>
+  <main class="blog-page">
+    <header class="blog-header">
+      <span class="eyebrow eyebrow-danger">
+        <AlertTriangle className="eyebrow-icon" aria-hidden="true" strokeWidth={2.4} />
+        Cảnh báo & tin tức
+      </span>
+      <h1>Tin bảo mật bạn cần biết</h1>
+      <p class="lede">Cập nhật khi có chiêu lừa đảo mới hoặc sự cố lộ dữ liệu liên quan đến người dùng Việt.</p>
+
+      <div class="category-filters" role="group" aria-label="Lọc theo chủ đề">
+        <button type="button" class="cat-filter is-active" data-filter="all">
+          Tất cả <span class="count">{allPosts.length}</span>
+        </button>
+        {categoryStats.map((stat) => (
+          <button
+            type="button"
+            class:list={["cat-filter", `cat-${stat.key.replace(/\s+/g, "-")}`]}
+            data-filter={stat.key}
+            disabled={stat.count === 0}
+          >
+            {stat.key} <span class="count">{stat.count}</span>
+          </button>
+        ))}
+        <a href="/rss.xml" class="rss-link" title="Đăng ký RSS">
+          <Rss className="rss-icon" aria-hidden="true" strokeWidth={2.4} />
+          RSS
+        </a>
+      </div>
+    </header>
+
+    {featured && (
+      <a
+        href={`/blog/${featured.slug}/`}
+        class="featured-card"
+        data-category={featured.data.category}
+      >
+        <div class="featured-content">
+          <span class:list={["cat-badge", `cat-${featured.data.category.replace(/\s+/g, "-")}`]}>
+            {featured.data.category}
+          </span>
+          <span class="featured-flag">Bài nổi bật</span>
+          <h2>{featured.data.title}</h2>
+          <p>{featured.data.description}</p>
+          <span class="featured-meta">
+            <span>{featured.data.publishedDate.toLocaleDateString("vi-VN")}</span>
+            <span class="dot" aria-hidden="true">•</span>
+            <span>{featured.data.readTime}</span>
+            <span class="featured-cta">Đọc bài →</span>
+          </span>
+        </div>
+      </a>
+    )}
+
+    <ul class="post-list" id="post-list">
+      {rest.map((post) => (
+        <li class="post-list-item" data-category={post.data.category}>
+          <a href={`/blog/${post.slug}/`}>
+            <div class="post-list-head">
+              <span class:list={["cat-badge", `cat-${post.data.category.replace(/\s+/g, "-")}`]}>
+                {post.data.category}
+              </span>
+              <span class="post-date">{post.data.publishedDate.toLocaleDateString("vi-VN")}</span>
+            </div>
+            <h3>{post.data.title}</h3>
+            <p>{post.data.description}</p>
+            {post.data.tags.length > 0 && (
+              <div class="post-tags">
+                {post.data.tags.slice(0, 4).map((tag: string) => (
+                  <span class="tag">#{tag}</span>
+                ))}
+              </div>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    {allPosts.length === 0 && (
+      <p class="empty">Chưa có bài viết. Quay lại sau nhé.</p>
+    )}
+  </main>
+</BaseLayout>
+
+<script is:inline>
+  (function () {
+    const buttons = document.querySelectorAll(".cat-filter");
+    const items = document.querySelectorAll("[data-category]");
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const filter = btn.getAttribute("data-filter");
+        buttons.forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        items.forEach((item) => {
+          if (filter === "all" || item.getAttribute("data-category") === filter) {
+            item.removeAttribute("hidden");
+          } else {
+            item.setAttribute("hidden", "");
+          }
+        });
+      });
+    });
+  })();
+</script>
+
+<style>
+  .blog-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: clamp(40px, 5vw, 64px) 24px clamp(64px, 8vw, 96px);
+  }
+
+  .blog-header { margin-bottom: 36px; }
+
+  .eyebrow-icon { width: 14px; height: 14px; }
+
+  .eyebrow-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .blog-header h1 {
+    font-size: clamp(2rem, 1.2rem + 2.4vw, 3rem);
+    font-weight: 800;
+    margin: 16px 0 16px;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  .lede {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    font-size: 1.05rem;
+    margin-bottom: 28px;
+    max-width: 640px;
+  }
+
+  /* ===== Filters ===== */
+  .category-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .cat-filter {
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font: inherit;
+    font-family: var(--font-display);
+    color: var(--ink);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    transition: background var(--duration-fast),
+                border-color var(--duration-fast),
+                color var(--duration-fast);
+  }
+
+  .cat-filter:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .cat-filter:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .cat-filter.is-active {
+    background: var(--ink-strong);
+    border-color: var(--ink-strong);
+    color: #fff;
+  }
+
+  .cat-filter .count {
+    background: var(--surface-soft);
+    color: var(--ink-muted);
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    margin-left: 4px;
+    font-weight: 700;
+  }
+
+  .cat-filter.is-active .count {
+    background: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .rss-link {
+    margin-left: auto;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: #F97316;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background var(--duration-fast), transform var(--duration-fast) var(--ease-out);
+  }
+
+  .rss-link :global(.rss-icon) {
+    width: 13px;
+    height: 13px;
+  }
+
+  .rss-link:hover {
+    background: #EA580C;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* ===== Featured card ===== */
+  .featured-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 36px;
+    margin-bottom: 32px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--duration-normal) var(--ease-out),
+                border-color var(--duration-fast),
+                box-shadow var(--duration-normal);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .featured-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: var(--danger);
+  }
+
+  .featured-card[data-category="cảnh báo"]::before { background: var(--danger); }
+  .featured-card[data-category="hướng dẫn"]::before { background: var(--success); }
+  .featured-card[data-category="tin tức"]::before { background: var(--primary); }
+  .featured-card[data-category="phân tích"]::before { background: var(--warn); }
+
+  .featured-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: 0 18px 36px -20px color-mix(in oklab, var(--primary) 50%, transparent);
+  }
+
+  .featured-flag {
+    margin-left: 8px;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .featured-card h2 {
+    font-size: clamp(1.4rem, 1rem + 1.2vw, 2rem);
+    font-weight: 800;
+    margin: 14px 0 14px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--ink-strong);
+  }
+
+  .featured-card p {
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    font-size: 1rem;
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    flex-wrap: wrap;
+  }
+
+  .featured-cta {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--primary);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .featured-card:hover .featured-cta { transform: translateX(4px); }
+
+  .dot { opacity: 0.5; }
+
+  /* ===== Cat badges ===== */
+  .cat-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .cat-badge.cat-cảnh-báo { background: var(--danger-soft); color: var(--danger); }
+  .cat-badge.cat-hướng-dẫn { background: var(--success-soft); color: #047857; }
+  .cat-badge.cat-tin-tức { background: var(--primary-soft); color: var(--primary); }
+  .cat-badge.cat-phân-tích { background: var(--warn-soft); color: #92400E; }
+
+  /* ===== Post list ===== */
+  .post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .post-list-item a {
+    display: block;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--duration-normal) var(--ease-out),
+                border-color var(--duration-fast),
+                box-shadow var(--duration-normal);
+  }
+
+  .post-list-item a:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-card);
+  }
+
+  .post-list-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .post-date {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+
+  .post-list-item h3 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.35;
+    color: var(--ink-strong);
+  }
+
+  .post-list-item p {
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin-bottom: 12px;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.76rem;
+    color: var(--ink-muted);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--ink-muted);
+    padding: 80px 0;
+  }
+
+  @media (max-width: 600px) {
+    .featured-card { padding: 24px 20px; }
+    .post-list-item a { padding: 18px 16px; }
+    .rss-link { margin-left: 0; }
+  }
+</style>
