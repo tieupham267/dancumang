@@ -1,5 +1,5 @@
 ### Stage 1 — build the static site
-FROM node:20-alpine AS builder
+FROM node:22-alpine3.23 AS builder
 WORKDIR /app
 
 # Cài deps trước để cache layer khi chỉ thay đổi source
@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build
 
 ### Stage 2 — serve với nginx
-FROM nginx:1.27-alpine AS runner
+FROM nginx:stable-alpine3.23 AS runner
 
 # Bỏ default config
 RUN rm /etc/nginx/conf.d/default.conf

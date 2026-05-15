@@ -37,7 +37,7 @@ for (const lesson of allLessons) {
       level: id <= 2 ? "CƠ BẢN" : "TRUNG CẤP",
       count: 1,
       totalMinutes: minutes,
-      firstSlug: lesson.slug,
+      firstSlug: lesson.id,
     });
   }
 }
@@ -267,7 +267,7 @@ const todayShort = `${pad2(today.getDate())}.${pad2(today.getMonth() + 1)}.${tod
           </p>
 
           <div class="alerts-grid">
-            <a href={`/blog/${featuredAlert.slug}/`} class="alert-featured">
+            <a href={`/blog/${featuredAlert.id}/`} class="alert-featured">
               <div class="alert-featured-tag">
                 <span class="dot" aria-hidden="true"></span>
                 {featuredAlert.data.category.toUpperCase()}
@@ -285,7 +285,7 @@ const todayShort = `${pad2(today.getDate())}.${pad2(today.getMonth() + 1)}.${tod
 
             <div class="alerts-list">
               {otherAlerts.map((post) => (
-                <a href={`/blog/${post.slug}/`} class="alert-card">
+                <a href={`/blog/${post.id}/`} class="alert-card">
                   <div class="alert-card-tag">{post.data.category.toUpperCase()}</div>
                   <h4>{post.data.title}</h4>
                   <p>{post.data.description}</p>

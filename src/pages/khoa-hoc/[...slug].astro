@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Quiz from "../../components/Quiz.tsx";
 import {
@@ -21,19 +21,19 @@ type LucideIcon = ComponentType<{ className?: string; "aria-hidden"?: boolean; s
 export async function getStaticPaths() {
   const lessons = await getCollection("courses");
   return lessons.map((lesson) => ({
-    params: { slug: lesson.slug },
+    params: { slug: lesson.id },
     props: { lesson },
   }));
 }
 
 const { lesson } = Astro.props;
-const { Content } = await lesson.render();
+const { Content } = await render(lesson);
 
 const allLessons = (await getCollection("courses"))
   .filter((l) => l.data.module.id === lesson.data.module.id && !l.data.draft)
   .sort((a, b) => a.data.order - b.data.order);
 
-const currentIndex = allLessons.findIndex((l) => l.slug === lesson.slug);
+const currentIndex = allLessons.findIndex((l) => l.id === lesson.id);
 const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
 const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
@@ -122,7 +122,7 @@ const moduleId = lesson.data.module.id;
 
     <nav class="lesson-nav" aria-label="Bài trước và bài sau">
       {prevLesson ? (
-        <a href={`/khoa-hoc/${prevLesson.slug}`} class="nav-link prev">
+        <a href={`/khoa-hoc/${prevLesson.id}`} class="nav-link prev">
           <span class="nav-direction">
             <ArrowLeft className="nav-arrow" aria-hidden={true} strokeWidth={2.2} />
             Bài trước
@@ -134,7 +134,7 @@ const moduleId = lesson.data.module.id;
       )}
 
       {nextLesson ? (
-        <a href={`/khoa-hoc/${nextLesson.slug}`} class="nav-link next">
+        <a href={`/khoa-hoc/${nextLesson.id}`} class="nav-link next">
           <span class="nav-direction">
             Bài tiếp
             <ArrowRight className="nav-arrow" aria-hidden={true} strokeWidth={2.2} />
@@ -159,8 +159,8 @@ const moduleId = lesson.data.module.id;
       </h3>
       <ol>
         {allLessons.map((l) => (
-          <li class:list={[{ active: l.slug === lesson.slug }]}>
-            <a href={`/khoa-hoc/${l.slug}`}>
+          <li class:list={[{ active: l.id === lesson.id }]}>
+            <a href={`/khoa-hoc/${l.id}`}>
               <span class="outline-order">{String(l.data.order).padStart(2, "0")}</span>
               <span>{l.data.title}</span>
             </a>

@@ -112,7 +112,7 @@ const totalLessons = allLessons.length;
               const hasQuiz = Array.isArray(lesson.data.quiz) && lesson.data.quiz.length > 0;
               return (
                 <li>
-                  <a href={`/khoa-hoc/${lesson.slug}`} class="lesson-link">
+                  <a href={`/khoa-hoc/${lesson.id}`} class="lesson-link">
                     <span class="lesson-order">{String(lesson.data.order).padStart(2, "0")}</span>
                     <span class="lesson-info">
                       <span class="lesson-title">{lesson.data.title}</span>

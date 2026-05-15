@@ -1,11 +1,12 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 // ============================================================
 // KHÓA HỌC — Mỗi file .md/.mdx là một BÀI HỌC
 // Cấu trúc thư mục: courses/{module-slug}/{lesson-slug}.md
 // ============================================================
 const courses = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/courses' }),
   schema: z.object({
     // ---- Thông tin module ----
     module: z.object({
@@ -44,7 +45,7 @@ const courses = defineCollection({
 // BLOG / TIN TỨC — Bài viết về bảo mật, cảnh báo, hướng dẫn
 // ============================================================
 const blog = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
   schema: z.object({
     title: z.string(),
     description: z.string(),

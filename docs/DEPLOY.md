@@ -265,7 +265,7 @@ docker run --rm -v dancumang_caddy_data:/data -v $(pwd):/backup alpine \
 
 ### Update Node version trong image
 
-Sửa `FROM node:20-alpine AS builder` trong `Dockerfile`, rebuild.
+Sửa `FROM node:22-alpine AS builder` trong `Dockerfile`, rebuild. (Astro 6 yêu cầu Node ≥ 22.12.)
 
 ---
 

@@ -1,21 +1,21 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { Calendar, Clock, RefreshCw, ArrowLeft, ArrowRight } from "lucide-react";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts.map((post) => ({
-    params: { slug: post.slug },
+    params: { slug: post.id },
     props: { post },
   }));
 }
 
 const { post } = Astro.props;
-const { Content } = await post.render();
+const { Content } = await render(post);
 
 const related = (await getCollection("blog"))
-  .filter((p) => !p.data.draft && p.slug !== post.slug && p.data.category === post.data.category)
+  .filter((p) => !p.data.draft && p.id !== post.id && p.data.category === post.data.category)
   .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime())
   .slice(0, 3);
 
@@ -74,7 +74,7 @@ const updated = post.data.updatedDate ? post.data.updatedDate.toLocaleDateString
         <ul>
           {related.map((p) => (
             <li>
-              <a href={`/blog/${p.slug}/`}>
+              <a href={`/blog/${p.id}/`}>
                 <span class="related-title">{p.data.title}</span>
                 <span class="related-meta">
                   <span>{p.data.publishedDate.toLocaleDateString("vi-VN")}</span>

@@ -20,7 +20,7 @@ const categoryStats: CategoryStat[] = allCategories.map((key) => ({
 }));
 
 const featured = allPosts.find((post) => post.data.featured) ?? allPosts[0];
-const rest = allPosts.filter((post) => post.slug !== featured?.slug);
+const rest = allPosts.filter((post) => post.id !== featured?.id);
 ---
 
 <BaseLayout
@@ -59,7 +59,7 @@ const rest = allPosts.filter((post) => post.slug !== featured?.slug);
 
     {featured && (
       <a
-        href={`/blog/${featured.slug}/`}
+        href={`/blog/${featured.id}/`}
         class="featured-card"
         data-category={featured.data.category}
       >
@@ -83,7 +83,7 @@ const rest = allPosts.filter((post) => post.slug !== featured?.slug);
     <ul class="post-list" id="post-list">
       {rest.map((post) => (
         <li class="post-list-item" data-category={post.data.category}>
-          <a href={`/blog/${post.slug}/`}>
+          <a href={`/blog/${post.id}/`}>
             <div class="post-list-head">
               <span class:list={["cat-badge", `cat-${post.data.category.replace(/\s+/g, "-")}`]}>
                 {post.data.category}

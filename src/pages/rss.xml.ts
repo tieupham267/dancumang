@@ -22,7 +22,7 @@ export async function GET(_context: APIContext): Promise<Response> {
 
   const items = posts
     .map((post) => {
-      const url = `${SITE}/blog/${post.slug}/`;
+      const url = `${SITE}/blog/${post.id}/`;
       return `    <item>
       <title>${escape(post.data.title)}</title>
       <link>${url}</link>
