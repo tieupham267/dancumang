@@ -1,11 +1,11 @@
 ---
 title: "Chiêu lừa đảo mới qua Zalo: Giả mạo công an yêu cầu cài app"
 description: "Kẻ lừa đảo giả danh công an, gọi điện yêu cầu nạn nhân cài ứng dụng chứa mã độc trên Zalo. Đây là cách nhận diện và phòng tránh."
-category: "canh-bao"
+category: "cảnh báo"
 tags: ["zalo", "lừa đảo", "giả mạo công an", "mã độc"]
-publishedAt: 2026-04-15
-urgency: "high"
-author: "Dân Cư Mạng"
+publishedDate: 2026-04-15
+featured: false
+readTime: "5 phút đọc"
 ---
 
 ## Chiêu lừa đảo đang lan rộng
