@@ -9,6 +9,7 @@ Hướng dẫn setup môi trường phát triển và deploy site lên productio
 - [Scripts](#scripts)
 - [Environment variables](#environment-variables)
 - [Build production](#build-production)
+- [Deploy: Docker / VPS (self-host)](#deploy-docker--vps-self-host)
 - [Deploy: Cloudflare Pages (khuyến nghị)](#deploy-cloudflare-pages-khuyến-nghị)
 - [Deploy: Vercel](#deploy-vercel)
 - [Deploy: Netlify](#deploy-netlify)
@@ -174,6 +175,97 @@ find dist -name "*.html" | wc -l  # số file HTML đã generate
 ```
 
 Target: <5MB tổng (toàn bộ site) cho phiên bản hiện tại.
+
+---
+
+## Deploy: Docker / VPS (self-host)
+
+Phù hợp với tiêu chí "self-hosted, kiểm soát dữ liệu" trong project brief.
+Repo có sẵn `Dockerfile`, `docker-compose.yml`, `deploy/nginx.conf` và `deploy/Caddyfile`.
+
+### Kiến trúc
+
+```
+┌───────────────┐     ┌────────────────┐
+│  Cloudflare   │ ──▶ │  VPS:80/443    │ ──▶ caddy ──▶ nginx ──▶ /usr/share/nginx/html
+│  (DNS/proxy)  │     │  hoặc Tunnel   │     (TLS auto)  (static)
+└───────────────┘     └────────────────┘
+```
+
+Image dùng **multi-stage**: stage 1 build Astro với Node 20, stage 2 serve bằng `nginx:1.27-alpine`. Output image ~50MB.
+
+### Cách 1: đứng sau Cloudflare Tunnel (đơn giản nhất)
+
+Không phải mở cổng 80/443 trên VPS — Cloudflare Tunnel chạy egress-only.
+
+```bash
+# Trên VPS
+git clone https://github.com/tieupham267/dancumang.git
+cd dancumang
+cp .env.example .env       # giữ HTTP_PORT=8080
+docker compose up -d        # site lắng nghe 127.0.0.1:8080
+
+# Sau đó trỏ Cloudflare Tunnel → http://localhost:8080
+```
+
+### Cách 2: VPS công khai, Caddy tự lo TLS
+
+```bash
+# Tạo .env với domain + email Let's Encrypt
+cat > .env <<EOF
+DOMAIN=dancumang.vn
+ACME_EMAIL=admin@dancumang.vn
+EOF
+
+# Khởi động cả nginx (web) và Caddy
+docker compose --profile caddy up -d
+
+# Mở firewall cổng 80 + 443 trên VPS
+sudo ufw allow 80,443/tcp
+```
+
+DNS:
+
+- `A` record `dancumang.vn` → IP VPS (proxy "DNS only" / cloud xám trên Cloudflare để Caddy issue được cert).
+- `A` record `www.dancumang.vn` → IP VPS (Caddy tự redirect về apex).
+
+Caddy lấy cert Let's Encrypt tự động sau 30–60 giây. Sau khi cert ổn định ~1 tuần, uncomment dòng HSTS trong `deploy/Caddyfile`.
+
+### Cách 3: dùng reverse proxy khác có sẵn (Traefik, nginx-proxy-manager)
+
+Bỏ profile `caddy`, expose `web` ra cổng nội bộ rồi cấu hình proxy trỏ về. Chỉ cần `docker compose up -d`.
+
+### Build & deploy lần kế tiếp
+
+```bash
+git pull
+docker compose build --no-cache web
+docker compose up -d
+# Verify
+curl -I http://localhost:8080/        # 200 OK
+curl http://localhost:8080/healthz    # ok
+```
+
+### Bảo mật container (đã cấu hình sẵn)
+
+- `read_only: true` — filesystem container không ghi được (chỉ /tmp, /var/cache/nginx qua tmpfs).
+- `no-new-privileges` + `cap_drop: ALL`, chỉ giữ caps tối thiểu cho nginx.
+- HEALTHCHECK 30s — orchestrator (compose / docker swarm) tự restart container chết.
+- nginx config có sẵn headers: CSP, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, COOP.
+- Block path lộ liễu `/.git`, `/.env`, `/.astro`, `/.vscode`, `/.idea`.
+
+### Backup
+
+Site là static — không có database. Chỉ cần backup repo (đã ở GitHub). Volume `caddy_data` chứa cert Let's Encrypt — backup nếu muốn tránh re-issue.
+
+```bash
+docker run --rm -v dancumang_caddy_data:/data -v $(pwd):/backup alpine \
+  tar czf /backup/caddy-data-$(date +%F).tar.gz -C / data
+```
+
+### Update Node version trong image
+
+Sửa `FROM node:20-alpine AS builder` trong `Dockerfile`, rebuild.
 
 ---
 

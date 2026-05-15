@@ -1,0 +1,35 @@
+# Caddyfile — TLS tự động (Let's Encrypt) + reverse proxy đến container web
+#
+# Biến môi trường được docker-compose truyền vào:
+#   {$DOMAIN}        — dancumang.vn
+#   {$ACME_EMAIL}    — email đăng ký ACME
+
+{
+	email {$ACME_EMAIL}
+	# Mặc định Caddy đã dùng HTTPS tự động + redirect HTTP → HTTPS
+}
+
+{$DOMAIN}, www.{$DOMAIN} {
+	encode zstd gzip
+
+	# Forward traffic về nginx container (cùng network)
+	reverse_proxy web:80 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# Bổ sung HSTS (chỉ bật sau khi cert đã ổn định ít nhất 1 tuần)
+	# header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+	# Log JSON (giúp xem ai truy cập gì khi cần)
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+}
+
+# Redirect www → apex (sau khi cert OK, có thể bỏ bằng cách gộp vào block trên)
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
