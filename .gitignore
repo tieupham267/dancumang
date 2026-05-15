@@ -35,3 +35,9 @@ Thumbs.db
 
 # Internal tooling
 .code-review-graph/
+
+# Local Claude Code config
+.claude/
+
+# Design mockups (large binary exports — not for version control)
+mockup/
