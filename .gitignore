@@ -41,3 +41,8 @@ Thumbs.db
 
 # Design mockups (large binary exports — not for version control)
 mockup/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
