@@ -1,10 +1,18 @@
 ---
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
 interface Props {
   title: string;
   description?: string;
+  hideChrome?: boolean;
 }
 
-const { title, description = "Kiến thức bảo mật cho mọi người — miễn phí, bằng tiếng Việt." } = Astro.props;
+const {
+  title,
+  description = "Kiến thức bảo mật cho mọi người — miễn phí, bằng tiếng Việt.",
+  hideChrome = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -13,58 +21,293 @@ const { title, description = "Kiến thức bảo mật cho mọi người — m
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#DA251D" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="Dân Cư Mạng — Cảnh báo bảo mật" href="/rss.xml" />
 
     <title>{title}</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;1,6..72,600&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dân Cư Mạng" />
     <meta property="og:locale" content="vi_VN" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
 
   <body>
+    {!hideChrome && <SiteHeader />}
     <slot />
+    {!hideChrome && <SiteFooter />}
   </body>
 </html>
 
 <style is:global>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  :root {
+    /* ===== Paper & Ink (editorial press) ===== */
+    --paper: #FAF7F2;            /* warm off-white, masthead paper */
+    --paper-deep: #F2EDE3;       /* sunken cream */
+    --surface: #FFFFFF;          /* card surface, slight contrast vs paper */
+    --surface-soft: #F4EFE5;
+    --surface-sunken: #ECE5D7;
+
+    --ink: #1A1A1A;              /* near-black body */
+    --ink-strong: #0B0B0B;       /* headlines */
+    --ink-muted: #5C5750;        /* warm gray for meta */
+    --ink-faint: #8A857C;        /* faint captions */
+
+    --rule: rgba(26, 26, 26, 0.14);     /* hairline rules */
+    --rule-strong: rgba(26, 26, 26, 0.28);
+    --rule-soft: rgba(26, 26, 26, 0.08);
+
+    /* ===== Accent — Đỏ VN ===== */
+    --accent: #DA251D;           /* Vietnamese flag red */
+    --accent-deep: #B41E18;
+    --accent-soft: #FCE6E4;
+    --accent-ink: #6B100B;
+
+    /* Status (subdued, paper-friendly) */
+    --warn: #C77A00;
+    --warn-soft: #FAEAC8;
+    --danger: #DA251D;
+    --danger-soft: #FCE6E4;
+    --success: #1F6B3A;
+    --success-soft: #DEEEDF;
+
+    /* Module palette — editorial-friendly tones */
+    --module-1: #DA251D;  /* Mật khẩu — Đỏ VN */
+    --module-2: #B8531C;  /* Phishing — burnt orange */
+    --module-3: #2C3E50;  /* Mạng xã hội — ink navy */
+    --module-4: #4B6043;  /* Thiết bị — olive */
+
+    /* Aliases kept for backwards-compat with interior pages */
+    --bg: var(--paper);
+    --primary: var(--accent);
+    --primary-hover: var(--accent-deep);
+    --primary-soft: var(--accent-soft);
+    --primary-strong: var(--accent-deep);
+    --border: var(--rule);
+    --border-strong: var(--rule-strong);
+
+    /* Shadows — almost flat, editorial */
+    --shadow-sm: 0 1px 0 rgba(11, 11, 11, 0.04);
+    --shadow-card: 0 1px 0 rgba(11, 11, 11, 0.04);
+    --shadow-card-hover: 0 6px 22px -10px rgba(11, 11, 11, 0.16);
+    --shadow-primary: 0 4px 14px rgba(218, 37, 29, 0.22);
+    --shadow-primary-hover: 0 6px 20px rgba(218, 37, 29, 0.34);
+
+    /* Radius — editorial flat */
+    --radius-sm: 2px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    --radius-xl: 2px;
+    --radius-pill: 999px;
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 240ms;
+
+    /* Typography */
+    --font-sans: "Inter Tight", "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-serif: "Newsreader", "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-display: var(--font-sans);
+    --font-body: var(--font-sans);
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+    /* Layout */
+    --container: 1280px;
+    --container-narrow: 880px;
+    --container-reading: 720px;
+
+    /* Section vertical rhythm */
+    --space-section: clamp(64px, 4vw + 32px, 120px);
   }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html {
     scroll-behavior: smooth;
+    background: var(--paper);
   }
 
   body {
-    font-family: "Be Vietnam Pro", system-ui, sans-serif;
-    background: #fdfaf6;
-    color: #2d2d3a;
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: clamp(1rem, 0.94rem + 0.2vw, 1.0625rem);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
   }
 
-  h1, h2, h3, h4 {
-    font-family: "Playfair Display", Georgia, serif;
+  body > main,
+  body > article { flex: 1; }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--ink-strong);
+    line-height: 1.1;
+  }
+
+  /* Serif italic accent — used inside headlines for emphasis */
+  .serif-italic,
+  em.serif {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.015em;
   }
 
   a {
-    color: #0f3460;
+    color: var(--accent);
+    text-decoration: none;
+    transition: color var(--duration-fast);
   }
 
+  a:hover { color: var(--accent-deep); }
+
+  code, pre, kbd { font-family: var(--font-mono); }
+
   ::selection {
-    background: #e9456040;
+    background: var(--accent);
+    color: #fff;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ============================================================
+     Reusable utilities — editorial press kit
+     ============================================================ */
+  .container {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .container-narrow {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  @media (max-width: 640px) {
+    .container, .container-narrow { padding: 0 18px; }
+  }
+
+  /* Small-caps tag, used for sections, dates, kickers */
+  .eyebrow,
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-strong);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .kicker--accent { color: var(--accent); }
+  .kicker--muted { color: var(--ink-muted); }
+
+  /* Section header — newspaper-style with §number and rule */
+  .section-mark {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ink-strong);
+    margin-bottom: 36px;
+  }
+  .section-mark__label {
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-strong);
+  }
+  .section-mark__dash { color: var(--ink-faint); }
+  .section-mark__num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    color: var(--ink-faint);
+    margin-left: auto;
+    font-size: 0.95rem;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-radius: 2px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.96rem;
+    text-decoration: none;
+    line-height: 1;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform var(--duration-fast) var(--ease-out),
+                background var(--duration-fast),
+                box-shadow var(--duration-fast),
+                color var(--duration-fast),
+                border-color var(--duration-fast);
+  }
+  .btn-primary {
+    background: var(--ink-strong);
+    color: var(--paper);
+    border-color: var(--ink-strong);
+  }
+  .btn-primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-strong);
+    border-color: var(--ink-strong);
+  }
+  .btn-ghost:hover {
+    background: var(--ink-strong);
+    color: var(--paper);
+  }
+  .btn-large { padding: 18px 30px; font-size: 1.02rem; }
+
+  /* Hairline divider */
+  .rule { height: 1px; background: var(--ink-strong); }
+  .rule-soft { height: 1px; background: var(--rule); }
 </style>

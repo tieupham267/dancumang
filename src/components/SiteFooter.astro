@@ -1,0 +1,170 @@
+---
+const year = new Date().getFullYear();
+const issueNumber = 47;
+
+const today = new Date();
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const dateStamp = `${pad2(today.getDate())}.${pad2(today.getMonth() + 1)}.${today.getFullYear()}`;
+---
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-col footer-brand">
+      <div class="footer-brand-head">
+        <span class="footer-brand-name">Dân Cư Mạng</span>
+        <span class="footer-brand-issue">·{issueNumber}</span>
+      </div>
+      <p>Bản tin an ninh mạng cho người Việt. Miễn phí, không quảng cáo, mã nguồn mở.</p>
+    </div>
+
+    <div class="footer-col">
+      <div class="col-head">Nội dung</div>
+      <ul>
+        <li><a href="/khoa-hoc/">Khóa học</a></li>
+        <li><a href="/blog/">Blog &amp; Tin tức</a></li>
+        <li><a href="/cong-cu/">Công cụ</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <div class="col-head">Thực hành</div>
+      <ul>
+        <li><a href="/cong-cu/kiem-tra-mat-khau/">Kiểm tra mật khẩu</a></li>
+        <li><a href="/cong-cu/quiz-phishing/">Quiz lừa đảo</a></li>
+        <li><a href="/cong-cu/checklist/">Checklist</a></li>
+        <li><a href="/rss.xml">RSS feed</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col footer-emergency">
+      <div class="col-head">Khẩn cấp</div>
+      <ul>
+        <li>Tổng đài: <strong>113</strong></li>
+        <li>Cục An toàn TT</li>
+        <li>
+          <a href="https://khonggianmang.vn" target="_blank" rel="noopener noreferrer">
+            khonggianmang.vn
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© {year} Dân Cư Mạng · MIT · CC BY-SA 4.0</span>
+    <span class="footer-meta">
+      SỐ {issueNumber} · {dateStamp} · STATIC · NO TRACKING
+    </span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--ink-strong);
+    background: var(--paper);
+    margin-top: var(--space-section);
+  }
+
+  .footer-inner {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 56px 28px 32px;
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+
+  /* Brand block */
+  .footer-brand-head {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .footer-brand-name {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--ink-strong);
+  }
+  .footer-brand-issue {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+  .footer-brand p {
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  /* Column heads (small caps editorial labels) */
+  .col-head {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-strong);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ink-strong);
+  }
+
+  .footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.92rem;
+  }
+
+  .footer-col li,
+  .footer-col a {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color var(--duration-fast);
+  }
+  .footer-col a:hover { color: var(--accent); }
+
+  .footer-emergency strong { color: var(--accent); font-weight: 700; }
+
+  /* Bottom rule */
+  .footer-bottom {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 16px 28px 36px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+  }
+  .footer-meta {
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 880px) {
+    .footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      padding: 44px 20px 24px;
+    }
+  }
+  @media (max-width: 520px) {
+    .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+    .footer-bottom { justify-content: flex-start; padding: 16px 20px 32px; }
+  }
+</style>

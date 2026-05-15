@@ -1,0 +1,288 @@
+---
+import { getCollection } from "astro:content";
+
+const pathname = Astro.url.pathname;
+const isActive = (prefix: string) =>
+  prefix === "/" ? pathname === "/" : pathname === prefix || pathname.startsWith(prefix + "/");
+
+const issueNumber = 47;
+
+const today = new Date();
+const weekdayNames = [
+  "Chủ Nhật",
+  "Thứ Hai",
+  "Thứ Ba",
+  "Thứ Tư",
+  "Thứ Năm",
+  "Thứ Sáu",
+  "Thứ Bảy",
+];
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const todayLabel = `${weekdayNames[today.getDay()]} · ${pad2(today.getDate())}.${pad2(
+  today.getMonth() + 1
+)}.${today.getFullYear()}`;
+
+// Build news ticker headlines from latest blog posts (fallback to static list).
+const blog = (await getCollection("blog"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime());
+
+const tickerFallback: { tag: string; text: string }[] = [
+  { tag: "CRITICAL", text: "Chrome extensions đánh cắp 100K mật khẩu" },
+  { tag: "KASPERSKY", text: "48% mật khẩu thế giới bẻ khóa trong 60 giây" },
+  { tag: "ZALO SCAM", text: "Giả công an yêu cầu cài app" },
+  { tag: "VCB", text: "Cảnh báo SMS giả mạo hôm 14.05" },
+  { tag: "AT&T", text: "73 triệu khách hàng bị lộ dữ liệu" },
+];
+
+const tickerFromBlog = blog.slice(0, 5).map((p) => ({
+  tag: p.data.category.toUpperCase(),
+  text: p.data.title,
+}));
+
+const tickerItems = tickerFromBlog.length >= 3 ? tickerFromBlog : tickerFallback;
+// Duplicate the array so the marquee loop is seamless.
+const ticker = [...tickerItems, ...tickerItems];
+---
+
+<header class="masthead" role="banner">
+  <div class="masthead-inner">
+    <a href="/" class="brand" aria-label="Dân Cư Mạng — về trang chủ">
+      <span class="brand-name">Dân Cư Mạng</span>
+      <span class="brand-issue">·{issueNumber}</span>
+    </a>
+
+    <nav class="masthead-nav" aria-label="Điều hướng chính">
+      <a href="/" class:list={["nav-link", { active: isActive("/") }]}>Trang chủ</a>
+      <a href="/khoa-hoc/" class:list={["nav-link", { active: isActive("/khoa-hoc") }]}>Khóa học</a>
+      <a href="/blog/" class:list={["nav-link", { active: isActive("/blog") }]}>Bài đọc</a>
+      <a href="/blog/?cat=cảnh báo" class:list={["nav-link", { active: pathname === "/canh-bao" }]}>Cảnh báo</a>
+      <a href="/cong-cu/" class:list={["nav-link", { active: isActive("/cong-cu") }]}>Công cụ</a>
+    </nav>
+
+    <div class="masthead-date" aria-label="Hôm nay">
+      <span class="date-dot" aria-hidden="true"></span>
+      <span class="date-text">{todayLabel.toUpperCase()}</span>
+    </div>
+  </div>
+
+  <div class="ticker" aria-label="Tin nóng" role="region">
+    <div class="ticker-track">
+      {ticker.map((item, i) => (
+        <span class="ticker-item" data-index={i}>
+          <span class="ticker-mark" aria-hidden="true">◆</span>
+          <span class="ticker-tag">{item.tag}</span>
+          <span class="ticker-sep">·</span>
+          <span class="ticker-text">{item.text}</span>
+        </span>
+      ))}
+    </div>
+  </div>
+</header>
+
+<style>
+  .masthead {
+    background: var(--paper);
+    border-bottom: 1px solid var(--ink-strong);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .masthead-inner {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 18px 28px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 28px;
+  }
+
+  /* Brand wordmark */
+  .brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--ink-strong);
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .brand-issue {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  /* Nav */
+  .masthead-nav {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-link {
+    text-decoration: none;
+    color: var(--ink);
+    padding: 8px 14px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    transition: color var(--duration-fast), background var(--duration-fast);
+    border-radius: 2px;
+    position: relative;
+  }
+  .nav-link:hover { color: var(--accent); }
+  .nav-link.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  /* Date stamp */
+  .masthead-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ink-strong);
+    letter-spacing: 0.14em;
+    flex-shrink: 0;
+  }
+  .date-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.78); }
+  }
+
+  /* News ticker */
+  .ticker {
+    border-top: 1px solid var(--rule);
+    background: var(--paper);
+    overflow: hidden;
+    position: relative;
+  }
+  .ticker::before,
+  .ticker::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .ticker::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--paper), transparent);
+  }
+  .ticker::after {
+    right: 0;
+    background: linear-gradient(-90deg, var(--paper), transparent);
+  }
+
+  .ticker-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 9px 0;
+    white-space: nowrap;
+    animation: ticker-scroll 60s linear infinite;
+    will-change: transform;
+  }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 22px;
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .ticker-mark {
+    color: var(--accent);
+    font-size: 0.6rem;
+    transform: translateY(-1px);
+  }
+  .ticker-tag {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-strong);
+    font-size: 0.78rem;
+  }
+  .ticker-sep { color: var(--ink-faint); }
+  .ticker-text { color: var(--ink-muted); }
+
+  /* Responsive */
+  @media (max-width: 880px) {
+    .masthead-inner {
+      grid-template-columns: auto auto;
+      gap: 14px 16px;
+      padding: 14px 18px 12px;
+    }
+    .masthead-nav {
+      order: 3;
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+      gap: 2px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--rule);
+      margin-top: 4px;
+    }
+    .nav-link { padding: 6px 10px; font-size: 0.86rem; }
+    .nav-link.active::after { left: 10px; right: 10px; }
+    .masthead-date { justify-self: end; font-size: 0.66rem; letter-spacing: 0.1em; }
+    .brand-name { font-size: 1.25rem; }
+  }
+  @media (max-width: 480px) {
+    .masthead-date .date-text { display: none; }
+    .masthead-date::after {
+      content: "LIVE";
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+    }
+    .ticker-item { padding: 0 14px; font-size: 0.78rem; }
+  }
+</style>

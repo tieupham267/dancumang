@@ -1,0 +1,1022 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const issueNumber = 47;
+
+// ----- Courses -----
+const allLessons = (await getCollection("courses"))
+  .filter((lesson) => !lesson.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+interface ModuleSummary {
+  id: number;
+  title: string;
+  description: string;
+  level: string;
+  count: number;
+  totalMinutes: number;
+  firstSlug: string;
+}
+
+const modulesMap = new Map<number, ModuleSummary>();
+for (const lesson of allLessons) {
+  const id = lesson.data.module.id;
+  // Extract minutes from "8 phút" / "5 phút đọc" style
+  const m = /(\d+)/.exec(lesson.data.duration ?? "");
+  const minutes = m ? Number(m[1]) : 5;
+  const existing = modulesMap.get(id);
+  if (existing) {
+    existing.count += 1;
+    existing.totalMinutes += minutes;
+  } else {
+    modulesMap.set(id, {
+      id,
+      title: lesson.data.module.title,
+      description: lesson.data.module.description,
+      level: id <= 2 ? "CƠ BẢN" : "TRUNG CẤP",
+      count: 1,
+      totalMinutes: minutes,
+      firstSlug: lesson.slug,
+    });
+  }
+}
+const modules = Array.from(modulesMap.values()).sort((a, b) => a.id - b.id);
+
+const totalLessons = allLessons.length;
+const totalMinutes = modules.reduce((s, m) => s + m.totalMinutes, 0);
+
+// ----- Blog -----
+const allBlog = (await getCollection("blog"))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime());
+
+const featuredAlert = allBlog[0];
+const otherAlerts = allBlog.slice(1, 3);
+
+// ----- Date for hero -----
+const today = new Date();
+const startOfYear = new Date(today.getFullYear(), 0, 1);
+const week = Math.ceil(
+  ((today.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000) + startOfYear.getDay() + 1) / 7
+);
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const todayShort = `${pad2(today.getDate())}.${pad2(today.getMonth() + 1)}.${today.getFullYear()}`;
+---
+
+<BaseLayout
+  title="Dân Cư Mạng — Bảo mật cho mọi người, bằng tiếng Việt"
+  description="Bản tin an ninh mạng cho người Việt. Mật khẩu mạnh, nhận diện lừa đảo, an toàn mạng xã hội. Miễn phí, không quảng cáo, không thuật ngữ kỹ thuật."
+>
+  <main class="home">
+    {/* ============================================================
+        HERO — §01
+        Editorial cover: kicker line, big mixed-type headline,
+        intro, CTA pair, side stats panel + week warning callout.
+        ============================================================ */}
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-kickers">
+          <span class="kicker">Chuyên đề — Tuần {week} / {today.getFullYear()}</span>
+          <span class="kicker kicker--accent">
+            <span class="live-dot" aria-hidden="true"></span>
+            Cảnh báo mới
+          </span>
+          <span class="kicker kicker--muted">Bản tin miễn phí · Không quảng cáo</span>
+        </div>
+
+        <div class="hero-grid">
+          <div class="hero-main">
+            <div class="hero-issue">Vấn đề — N°{issueNumber}</div>
+            <h1 class="hero-headline">
+              An toàn <span class="serif-italic">không khó</span><br />
+              <span class="serif-italic">như</span> bạn nghĩ.
+            </h1>
+            <p class="hero-lede">
+              Mỗi tuần ở Việt Nam, hàng nghìn người mất tiền vì lừa đảo qua mạng.
+              Nạn nhân có thể là bất kỳ ai — bác sĩ, kỹ sư, sinh viên — chỉ vì
+              chưa ai dạy họ cách phòng.
+            </p>
+            <p class="hero-lede hero-lede--muted">
+              <strong>Dân Cư Mạng</strong> là dự án giáo dục cộng đồng mở: dạy bạn
+              từ con số 0, bằng tiếng Việt đời thường, không thuật ngữ, mỗi bài 5–10 phút.
+            </p>
+
+            <div class="hero-cta">
+              <a href="/khoa-hoc/" class="btn btn-primary btn-large">
+                Bắt đầu đọc — miễn phí
+              </a>
+              <a href="/blog/" class="btn btn-ghost btn-large">
+                Xem cảnh báo mới
+              </a>
+            </div>
+          </div>
+
+          <aside class="hero-sidebar" aria-label="Số liệu nổi bật">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-head-label">Số liệu</span>
+                <span class="panel-head-meta">2025-Q4</span>
+              </div>
+
+              <div class="stat-big">
+                <div class="stat-big-num">~9.500</div>
+                <p class="stat-big-cap">
+                  người Việt mất tiền vì lừa đảo qua mạng <em>mỗi tuần</em>
+                  <span class="stat-source">(ước tính từ báo cáo công an, 2025)</span>
+                </p>
+              </div>
+
+              <div class="stat-row">
+                <div class="stat-cell">
+                  <div class="stat-num">17K tỉ</div>
+                  <div class="stat-cap">thiệt hại VN, 2024</div>
+                </div>
+                <div class="stat-cell">
+                  <div class="stat-num">48%</div>
+                  <div class="stat-cap">MK bẻ trong 60s</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert-block">
+              <div class="alert-block-head">
+                <span aria-hidden="true">⚠</span> Tuần này
+              </div>
+              <p>
+                Chiêu lừa mới: SMS giả mạo VCB từ số <strong>+84 90•••</strong>
+                yêu cầu xác nhận giao dịch 15 triệu trong 10 phút.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+        §02 — Vì sao chúng tôi làm trang này?
+        ============================================================ */}
+    <section class="section principles">
+      <div class="container">
+        <div class="section-mark">
+          <span class="section-mark__label">Vấn đề</span>
+          <span class="section-mark__dash">—</span>
+          <h2 class="section-mark__title">Vì sao chúng tôi làm trang này?</h2>
+          <span class="section-mark__num">§02</span>
+        </div>
+        <p class="section-lede">Bốn nguyên tắc cốt lõi của Dân Cư Mạng.</p>
+
+        <div class="principles-grid">
+          <article class="principle">
+            <div class="principle-head"><span class="num">01</span> · NGÔN NGỮ</div>
+            <h3>Nói <span class="serif-italic">tiếng Việt</span></h3>
+            <p>
+              Không "phishing", "credential stuffing" trừ khi giải thích bằng ví dụ
+              đời thường. Như nói chuyện với người thân — không trịch thượng,
+              không hù dọa.
+            </p>
+          </article>
+
+          <article class="principle">
+            <div class="principle-head"><span class="num">02</span> · THIẾT BỊ</div>
+            <h3>Cho <span class="serif-italic">điện thoại</span></h3>
+            <p>
+              Mobile-first, tải nhanh kể cả mạng 3G hay điện thoại cũ. Đọc được
+              trên Zalo trong giờ ăn trưa.
+            </p>
+          </article>
+
+          <article class="principle">
+            <div class="principle-head"><span class="num">03</span> · QUYỀN RIÊNG TƯ</div>
+            <h3>Không <span class="serif-italic">backend</span></h3>
+            <p>
+              Không thu thập dữ liệu, không cần đăng nhập, không có cookie tracking.
+              Đúng tinh thần dạy bảo mật.
+            </p>
+          </article>
+
+          <article class="principle">
+            <div class="principle-head"><span class="num">04</span> · BỐI CẢNH</div>
+            <h3>Tình huống <span class="serif-italic">Việt Nam</span></h3>
+            <p>
+              Lừa đảo qua Zalo, giả công an gọi điện, SMS "OTP" — kịch bản thật
+              bạn gặp hàng tuần.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+        §03 — Chương trình
+        ============================================================ */}
+    <section class="section modules-section">
+      <div class="container">
+        <div class="section-mark">
+          <span class="section-mark__label">Chương trình</span>
+          <span class="section-mark__dash">—</span>
+          <h2 class="section-mark__title">
+            Bốn module, <span class="serif-italic">{totalLessons} bài</span>.
+          </h2>
+          <span class="section-mark__num">§03</span>
+        </div>
+        <p class="section-lede">
+          Bắt đầu từ Module 01 nếu bạn mới, hoặc nhảy thẳng vào chủ đề bạn quan tâm.
+        </p>
+
+        <div class="modules-grid">
+          {modules.map((mod) => (
+            <a
+              href={`/khoa-hoc/${mod.firstSlug}`}
+              class="module-tile"
+              style={`--mod: var(--module-${mod.id});`}
+              aria-label={`Module ${mod.id}: ${mod.title}`}
+            >
+              <div class="module-tile-num">{String(mod.id).padStart(2, "0")}</div>
+              <div class="module-tile-body">
+                <h3 class="module-tile-title">{mod.title}</h3>
+                <div class="module-tile-meta">
+                  {mod.level} · {mod.count} BÀI · ~{mod.totalMinutes} PHÚT
+                </div>
+                <p class="module-tile-desc">{mod.description}</p>
+              </div>
+              <div class="module-tile-cta">
+                <span class="module-tile-cta-label">BÀI →</span>
+                <span class="module-tile-arrow" aria-hidden="true">→</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+        §04 — Cảnh báo / Latest blog
+        ============================================================ */}
+    {featuredAlert && (
+      <section class="section alerts-section">
+        <div class="container">
+          <div class="section-mark">
+            <span class="section-mark__label">Cảnh báo</span>
+            <span class="section-mark__dash">—</span>
+            <h2 class="section-mark__title">Mới nhất tuần này.</h2>
+            <span class="section-mark__num">§04</span>
+          </div>
+          <p class="section-lede">
+            Lừa đảo, lộ dữ liệu, chiêu thức mới — cập nhật khi có chuyện đáng chú ý.
+          </p>
+
+          <div class="alerts-grid">
+            <a href={`/blog/${featuredAlert.slug}/`} class="alert-featured">
+              <div class="alert-featured-tag">
+                <span class="dot" aria-hidden="true"></span>
+                {featuredAlert.data.category.toUpperCase()}
+              </div>
+              <h3>{featuredAlert.data.title}</h3>
+              <p>{featuredAlert.data.description}</p>
+              <div class="alert-featured-meta">
+                <span>{featuredAlert.data.publishedDate.toLocaleDateString("vi-VN")}</span>
+                <span class="sep">·</span>
+                <span>{featuredAlert.data.readTime}</span>
+                <span class="sep">·</span>
+                <span class="read-more">Đọc tiếp →</span>
+              </div>
+            </a>
+
+            <div class="alerts-list">
+              {otherAlerts.map((post) => (
+                <a href={`/blog/${post.slug}/`} class="alert-card">
+                  <div class="alert-card-tag">{post.data.category.toUpperCase()}</div>
+                  <h4>{post.data.title}</h4>
+                  <p>{post.data.description}</p>
+                  <div class="alert-card-meta">
+                    {post.data.publishedDate.toLocaleDateString("vi-VN")} · {post.data.readTime}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    {/* ============================================================
+        §05 — Công cụ
+        ============================================================ */}
+    <section class="section tools-section">
+      <div class="container">
+        <div class="section-mark">
+          <span class="section-mark__label">Công cụ</span>
+          <span class="section-mark__dash">—</span>
+          <h2 class="section-mark__title">
+            Thực hành ngay, <span class="serif-italic">ngay tại đây</span>.
+          </h2>
+          <span class="section-mark__num">§05</span>
+        </div>
+        <p class="section-lede">Tất cả chạy trong trình duyệt. Không gửi dữ liệu đi đâu cả.</p>
+
+        <div class="tools-grid">
+          <a href="/cong-cu/kiem-tra-mat-khau/" class="tool-card">
+            <div class="tool-glyph" aria-hidden="true">α</div>
+            <h4>Kiểm tra độ mạnh mật khẩu</h4>
+            <p>Dán mật khẩu vào, biết ngay nó tệ hay đủ dùng.</p>
+            <span class="tool-cta">MỞ CÔNG CỤ →</span>
+          </a>
+          <a href="/cong-cu/quiz-phishing/" class="tool-card">
+            <div class="tool-glyph" aria-hidden="true">β</div>
+            <h4>Quiz nhận diện lừa đảo</h4>
+            <p>10 tin nhắn — bạn có nhận ra cái nào lừa đảo không?</p>
+            <span class="tool-cta">MỞ CÔNG CỤ →</span>
+          </a>
+          <a href="/cong-cu/checklist/" class="tool-card">
+            <div class="tool-glyph" aria-hidden="true">γ</div>
+            <h4>Checklist bảo mật cá nhân</h4>
+            <p>15 việc cần làm — tick từng cái khi xong.</p>
+            <span class="tool-cta">MỞ CÔNG CỤ →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+        Invitation — Big "47" + headline
+        ============================================================ */}
+    <section class="invite-section">
+      <div class="container invite-inner">
+        <div class="invite-bignum" aria-hidden="true">{issueNumber}</div>
+
+        <div class="invite-content">
+          <div class="invite-body">
+            <div class="kicker">Một lời mời</div>
+            <h2 class="invite-headline">
+              10 phút mỗi tuần.{" "}
+              <span class="serif-italic">Sau 1 tháng,</span> bạn sẽ không bị lừa nữa.
+            </h2>
+            <p>
+              Không cần đăng ký. Không cần trả phí. Không có quảng cáo.
+              Một dự án giáo dục cộng đồng mở, mã nguồn MIT, nội dung CC BY-SA 4.0.
+            </p>
+            <div class="invite-cta">
+              <a href="/khoa-hoc/" class="btn btn-primary btn-large">Bắt đầu module 01 →</a>
+              <a href="/blog/" class="btn btn-ghost btn-large">Cảnh báo mới nhất</a>
+            </div>
+          </div>
+
+          <aside class="invite-side">
+            <div class="invite-side-tag">Gia hạn</div>
+            <ul class="invite-side-list">
+              <li>{modules.length} module · {totalLessons} bài</li>
+              <li>~{Math.round(totalMinutes / 60)} giờ tổng cộng</li>
+              <li>Lưu tiến độ trong trình duyệt</li>
+              <li>Đọc offline được</li>
+              <li>RSS feed sẵn sàng</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .home { padding-top: 0; }
+
+  /* Section reusable padding */
+  .section {
+    padding: var(--space-section) 0;
+  }
+  .section + .section { border-top: 1px solid var(--rule); }
+
+  .section-lede {
+    font-family: var(--font-sans);
+    font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.2rem);
+    color: var(--ink-muted);
+    line-height: 1.55;
+    margin: -20px 0 36px;
+    max-width: 720px;
+  }
+
+  /* The section-mark utility from BaseLayout positions number on the right.
+     We extend it here to give the inline h2 some room. */
+  .section-mark { flex-wrap: wrap; align-items: baseline; }
+  .section-mark__title {
+    font-size: clamp(1.6rem, 1rem + 1.6vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--ink-strong);
+    flex: 1 0 auto;
+    margin-left: 8px;
+  }
+  @media (max-width: 720px) {
+    .section-mark { padding-bottom: 10px; }
+    .section-mark__title { width: 100%; margin: 6px 0 0; flex-basis: 100%; }
+    .section-mark__num { display: none; }
+  }
+
+  /* ===== HERO ===== */
+  .hero { padding: clamp(40px, 4vw, 72px) 0 clamp(56px, 5vw, 96px); }
+
+  .hero-kickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    align-items: baseline;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ink-strong);
+    margin-bottom: clamp(36px, 4vw, 56px);
+  }
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulse-fast 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-fast {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .hero-issue {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 18px;
+    letter-spacing: -0.005em;
+  }
+
+  .hero-headline {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(3rem, 1rem + 7vw, 7.2rem);
+    line-height: 0.96;
+    letter-spacing: -0.04em;
+    color: var(--ink-strong);
+    margin-bottom: clamp(24px, 2.4vw, 36px);
+  }
+  .hero-headline .serif-italic {
+    color: var(--accent);
+    font-size: 1em;
+    letter-spacing: -0.025em;
+  }
+
+  .hero-lede {
+    font-family: var(--font-sans);
+    font-size: clamp(1.05rem, 0.94rem + 0.4vw, 1.2rem);
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 56ch;
+    margin-bottom: 14px;
+  }
+  .hero-lede--muted { color: var(--ink-muted); }
+  .hero-lede strong { color: var(--ink-strong); font-weight: 700; }
+
+  .hero-cta {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  /* Sidebar — stats + alert */
+  .hero-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 120px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--ink-strong);
+    padding: 24px;
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .panel-head-label {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-strong);
+  }
+  .panel-head-meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .stat-big {
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stat-big-num {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 1.8rem + 2vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .stat-big-cap {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .stat-big-cap em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+  }
+  .stat-source {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .stat-cell { }
+  .stat-num {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 1.65rem;
+    line-height: 1;
+    color: var(--ink-strong);
+    letter-spacing: -0.03em;
+  }
+  .stat-cap {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .alert-block {
+    background: var(--accent);
+    color: #fff;
+    padding: 18px 20px;
+  }
+  .alert-block-head {
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.95;
+  }
+  .alert-block p {
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .alert-block strong {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  /* ===== Principles (§02) ===== */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--ink-strong);
+    border-left: 1px solid var(--ink-strong);
+  }
+  .principle {
+    padding: 28px;
+    border-right: 1px solid var(--ink-strong);
+    border-bottom: 1px solid var(--ink-strong);
+    background: var(--paper);
+    transition: background var(--duration-fast);
+  }
+  .principle:hover { background: var(--surface-soft); }
+  .principle-head {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+  }
+  .principle-head .num {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .principle h3 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--ink-strong);
+    line-height: 1.15;
+  }
+  .principle h3 .serif-italic { color: var(--accent); }
+  .principle p {
+    font-size: 0.94rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+  }
+  @media (max-width: 960px) {
+    .principles-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .principles-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Modules (§03) ===== */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--ink-strong);
+  }
+  .module-tile {
+    --mod: var(--accent);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 28px;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid var(--ink-strong);
+    border-right: 1px solid var(--ink-strong);
+    background: var(--paper);
+    transition: background var(--duration-fast);
+    position: relative;
+  }
+  .module-tile:nth-child(2n) { border-right: none; }
+  .module-tile:hover { background: var(--surface-soft); }
+  .module-tile:hover .module-tile-arrow { transform: translateX(6px); }
+
+  .module-tile-num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(3rem, 1rem + 3vw, 4.5rem);
+    line-height: 0.85;
+    color: var(--mod);
+    letter-spacing: -0.04em;
+  }
+  .module-tile-title {
+    font-size: clamp(1.25rem, 0.9rem + 0.6vw, 1.5rem);
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .module-tile-meta {
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .module-tile-desc {
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    max-width: 56ch;
+  }
+  .module-tile-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    align-self: stretch;
+    justify-content: space-between;
+  }
+  .module-tile-cta-label {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--mod);
+  }
+  .module-tile-arrow {
+    font-size: 1.4rem;
+    color: var(--mod);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  @media (max-width: 720px) {
+    .modules-grid { grid-template-columns: 1fr; }
+    .module-tile { border-right: none !important; gap: 18px; padding: 24px 20px; }
+    .module-tile-num { font-size: 2.6rem; }
+  }
+
+  /* ===== Alerts (§04) ===== */
+  .alerts-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 36px;
+    border-top: 1px solid var(--ink-strong);
+    padding-top: 32px;
+  }
+  .alert-featured {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding-right: 36px;
+    border-right: 1px solid var(--rule);
+  }
+  .alert-featured-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .alert-featured-tag .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .alert-featured h3 {
+    font-size: clamp(1.6rem, 1.1rem + 1.4vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--ink-strong);
+    margin-bottom: 12px;
+    letter-spacing: -0.025em;
+    transition: color var(--duration-fast);
+  }
+  .alert-featured:hover h3 { color: var(--accent); }
+  .alert-featured > p {
+    font-size: 1.02rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+    margin-bottom: 18px;
+    max-width: 60ch;
+  }
+  .alert-featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    flex-wrap: wrap;
+  }
+  .alert-featured-meta .sep { color: var(--ink-faint); }
+  .alert-featured-meta .read-more {
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  .alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .alert-card {
+    display: block;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule);
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .alert-card:last-child { border-bottom: none; padding-bottom: 0; }
+  .alert-card:hover { transform: translateX(4px); }
+  .alert-card:hover h4 { color: var(--accent); }
+  .alert-card-tag {
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .alert-card h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    color: var(--ink-strong);
+    transition: color var(--duration-fast);
+  }
+  .alert-card p {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .alert-card-meta {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 880px) {
+    .alerts-grid { grid-template-columns: 1fr; gap: 28px; }
+    .alert-featured { border-right: none; padding-right: 0; padding-bottom: 28px; border-bottom: 1px solid var(--ink-strong); }
+  }
+
+  /* ===== Tools (§05) ===== */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--ink-strong);
+    border-left: 1px solid var(--ink-strong);
+  }
+  .tool-card {
+    display: block;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: inherit;
+    border-right: 1px solid var(--ink-strong);
+    border-bottom: 1px solid var(--ink-strong);
+    background: var(--paper);
+    transition: background var(--duration-fast);
+  }
+  .tool-card:hover { background: var(--surface-soft); }
+  .tool-glyph {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .tool-card h4 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--ink-strong);
+    line-height: 1.25;
+  }
+  .tool-card:hover h4 { color: var(--accent); }
+  .tool-card p {
+    font-size: 0.92rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+  .tool-cta {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+  }
+  @media (max-width: 760px) {
+    .tools-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Invitation ===== */
+  .invite-section {
+    background: var(--ink-strong);
+    color: var(--paper);
+    padding: clamp(64px, 6vw, 120px) 0;
+    margin-top: var(--space-section);
+    position: relative;
+    overflow: hidden;
+  }
+  .invite-inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(28px, 4vw, 72px);
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+  .invite-bignum {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(10rem, 4rem + 18vw, 22rem);
+    line-height: 0.78;
+    color: var(--accent);
+    letter-spacing: -0.06em;
+    user-select: none;
+  }
+  .invite-content {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .invite-body .kicker { color: var(--accent); margin-bottom: 16px; }
+  .invite-headline {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 1rem + 2.6vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--paper);
+    margin-bottom: 22px;
+  }
+  .invite-headline .serif-italic { color: var(--accent); }
+  .invite-body p {
+    color: rgba(250, 247, 242, 0.74);
+    font-size: 1.02rem;
+    line-height: 1.6;
+    max-width: 56ch;
+    margin-bottom: 28px;
+  }
+  .invite-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .invite-section .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .invite-section .btn-primary:hover {
+    background: #fff;
+    color: var(--ink-strong);
+    border-color: #fff;
+  }
+  .invite-section .btn-ghost {
+    border-color: rgba(250, 247, 242, 0.4);
+    color: var(--paper);
+  }
+  .invite-section .btn-ghost:hover {
+    background: var(--paper);
+    color: var(--ink-strong);
+    border-color: var(--paper);
+  }
+
+  .invite-side {
+    border-left: 1px solid rgba(250, 247, 242, 0.25);
+    padding-left: 28px;
+  }
+  .invite-side-tag {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .invite-side-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: rgba(250, 247, 242, 0.86);
+  }
+
+  @media (max-width: 960px) {
+    .invite-inner { grid-template-columns: 1fr; }
+    .invite-bignum { font-size: clamp(9rem, 14vw, 14rem); }
+    .invite-content { grid-template-columns: 1fr; gap: 28px; }
+    .invite-side { border-left: none; padding-left: 0; border-top: 1px solid rgba(250, 247, 242, 0.25); padding-top: 24px; }
+  }
+
+  /* ===== Hero responsive ===== */
+  @media (max-width: 960px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .hero-sidebar { position: static; }
+  }
+  @media (max-width: 520px) {
+    .hero-cta .btn { flex: 1 1 auto; }
+    .hero-kickers { gap: 14px 18px; }
+  }
+</style>
